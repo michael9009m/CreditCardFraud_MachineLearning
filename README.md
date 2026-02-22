@@ -1,7 +1,3 @@
-Here is a clean, professional GitHub-ready README version. You can paste this directly into `README.md`.
-
----
-
 # Fraudulent Transaction Checker
 
 ### Michael Martinez
@@ -164,7 +160,3 @@ This project demonstrates:
 * That properly tuned neural networks can outperform traditional models in this domain
 
 The final neural network provided the strongest real-world balance and is the best candidate for deployment.
-
----
-
-If you want, I can also tighten this further to make it look even more recruiter-friendly and less academic.
