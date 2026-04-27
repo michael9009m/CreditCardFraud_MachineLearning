@@ -142,7 +142,7 @@ All preprocessing parameters are saved to `scaler_params.json` and applied ident
 
 ## Architecture
 
-```
+
 Browser (demo webpage)
         │
         │  POST /predict  (JSON payload)
@@ -155,7 +155,7 @@ AWS Lambda (Python 3.11)
   ├── Applies preprocessing (scaler_params.json)
   ├── Runs inference
   └── Returns prediction + probability
-```
+
 
 ---
 
@@ -188,7 +188,7 @@ Generates statistically realistic synthetic transactions by sampling V1–V28 fr
 
 ## Project Structure
 
-```
+
 CreditCardFraud_MachineLearning/
 ├── detectingCreditCardFraud.ipynb   # Full training notebook
 ├── fraud_model_xgb.json             # Trained XGBoost model
@@ -197,7 +197,7 @@ CreditCardFraud_MachineLearning/
 ├── lambda_function.py               # AWS Lambda handler
 ├── index.html                       # Live demo webpage
 └── README.md
-```
+
 
 ---
 
