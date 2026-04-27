@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fraud Detection — Live Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: #e2e0d8;
+    --border2: #cccac0;
+    --accent: #1a6b3c;
+    --accent-light: #e8f5ee;
+    --accent-mid: #2d9e5f;
+    --danger: #c0392b;
+    --danger-light: #fdf0ee;
+    --danger-mid: #e05c4a;
+    --text: #1a1916;
+    --text2: #4a4840;
+    --muted: #8a8778;
+    --sans: 'Instrument Sans', sans-serif;
+    --serif: 'Instrument Serif', serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+  }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .topbar-brand {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .topbar-brand span { color: var(--accent-mid); }
+
+  .topbar-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--accent);
+    background: var(--accent-light);
+    border: 1px solid #b8dfc9;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-weight: 600;
+  }
+
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent-mid);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; } 50% { opacity: 0.4; }
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 24px 64px;
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: end;
+    margin-bottom: 40px;
+  }
+
+  .hero-text h1 {
+    font-family: var(--serif);
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+
+  .hero-text h1 em { font-style: italic; color: var(--accent-mid); }
+
+  .hero-text p {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.6;
+    max-width: 460px;
+  }
+
+  .hero-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .hero-stat-num {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .hero-stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-align: right;
+  }
+
+  @media (max-width: 600px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-stats { flex-direction: row; align-items: flex-start; }
+    .hero-stat-label { text-align: left; }
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+
+  @media (max-width: 500px) { .metrics { grid-template-columns: repeat(2,1fr); } }
+
+  .metric {
+    background: var(--surface);
+    padding: 16px 20px;
+  }
+
+  .metric-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .metric-value {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .metric-value.green { color: var(--accent); }
+
+  .tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 24px;
+  }
+
+  .tab {
+    padding: 10px 20px;
+    background: transparent;
+    border: none;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.15s;
+  }
+
+  .tab.active { color: var(--text); border-bottom-color: var(--text); }
+  .tab:hover:not(.active) { color: var(--text2); }
+
+  .panel { display: none; }
+  .panel.active { display: block; animation: up 0.2s ease; }
+
+  @keyframes up {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .preset-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 540px) { .preset-grid { grid-template-columns: 1fr; } }
+
+  .preset-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+
+  .preset-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.07);
+  }
+
+  .preset-card.legit:hover { border-color: #b8dfc9; }
+  .preset-card.fraud:hover { border-color: #f0b8b2; }
+
+  .preset-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+
+  .preset-tag.legit { background: var(--accent-light); color: var(--accent); border: 1px solid #b8dfc9; }
+  .preset-tag.fraud { background: var(--danger-light); color: var(--danger); border: 1px solid #f0b8b2; }
+
+  .preset-card h3 {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+
+  .preset-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--muted);
+    padding: 5px 0;
+    border-bottom: 1px solid var(--surface2);
+  }
+
+  .preset-row:last-of-type { border-bottom: none; }
+  .preset-row span { color: var(--text2); font-weight: 500; }
+
+  .preset-cta {
+    margin-top: 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-mid);
+  }
+
+  .preset-card.fraud .preset-cta { color: var(--danger-mid); }
+
+  .synth-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .synth-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+
+  .synth-card > p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.55;
+    margin-bottom: 20px;
+  }
+
+  .toggle-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .toggle-btn {
+    padding: 11px 16px;
+    border-radius: 9px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--muted);
+  }
+
+  .toggle-btn.active-legit { background: var(--accent-light); border-color: #b8dfc9; color: var(--accent); }
+  .toggle-btn.active-fraud { background: var(--danger-light); border-color: #f0b8b2; color: var(--danger); }
+
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+
+  .field label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .field input {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .field input:focus { border-color: var(--border2); }
+
+  .v-peek-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 7px;
+  }
+
+  .v-peek {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.9;
+    margin-bottom: 18px;
+    max-height: 88px;
+    overflow-y: auto;
+  }
+
+  .vk { color: #4a7fa0; }
+  .vv { color: #6b4fa0; }
+
+  .run-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--text);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: -0.01em;
+  }
+
+  .run-btn:hover { background: var(--text2); transform: translateY(-1px); }
+  .run-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+  .result {
+    display: none;
+    margin-top: 18px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    animation: up 0.25s ease;
+  }
+
+  .result.show { display: block; }
+
+  .result-top {
+    padding: 22px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .result-top.legit { background: var(--accent-light); border-bottom: 1px solid #b8dfc9; }
+  .result-top.fraud { background: var(--danger-light); border-bottom: 1px solid #f0b8b2; }
+
+  .result-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+
+  .result-icon.legit { background: #fff; border: 1.5px solid #b8dfc9; }
+  .result-icon.fraud { background: #fff; border: 1.5px solid #f0b8b2; }
+
+  .result-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .result-title.legit { color: var(--accent); }
+  .result-title.fraud { color: var(--danger); }
+
+  .result-sub { font-size: 12px; color: var(--muted); margin-top: 2px; font-weight: 500; }
+
+  .result-body { padding: 20px 24px; }
+
+  .conf-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .conf-row span {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .conf-row strong { font-size: 14px; font-weight: 700; color: var(--text); }
+
+  .conf-track {
+    height: 7px;
+    background: var(--surface2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 18px;
+    border: 1px solid var(--border);
+  }
+
+  .conf-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.9s cubic-bezier(0.16,1,0.3,1);
+  }
+
+  .conf-fill.legit { background: var(--accent-mid); }
+  .conf-fill.fraud { background: var(--danger-mid); }
+
+  .raw-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .raw {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .rk { color: #4a7fa0; }
+  .rs { color: var(--accent); }
+  .rn { color: #7b5ea0; }
+
+  .error-box {
+    display: none;
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: var(--danger-light);
+    border: 1px solid #f0b8b2;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--danger);
+  }
+
+  .error-box.show { display: block; }
+
+  .dots { display: inline-flex; gap: 4px; align-items: center; }
+  .dots span {
+    width: 6px; height: 6px; border-radius: 50%; background: #fff;
+    animation: dot 1.2s infinite;
+  }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes dot {
+    0%,80%,100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  .footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .footer-l { font-size: 12px; color: var(--muted); }
+  .footer-l strong { color: var(--text2); }
+
+  .endpoint {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">Fraud<span>Detection</span> — Michael Martinez</div>
+  <div class="topbar-badge"><div class="live-dot"></div> Live on AWS Lambda</div>
+</div>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-text">
+      <h1>Real-time<br><em>Fraud Detection</em></h1>
+      <p>XGBoost model trained on 284,807 bank transactions, deployed serverlessly on AWS Lambda. Predicts fraud in under 100ms.</p>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-num">92%</div>
+        <div class="hero-stat-label">Accuracy</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">91ms</div>
+        <div class="hero-stat-label">Avg latency</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">Model</div>
+      <div class="metric-value">XGBoost</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Fraud F1</div>
+      <div class="metric-value green">0.91</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Precision</div>
+      <div class="metric-value green">0.93</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Recall</div>
+      <div class="metric-value green">0.90</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('preset', this)">Preset Transactions</button>
+    <button class="tab" onclick="switchTab('synthetic', this)">Synthetic Generator</button>
+  </div>
+
+  <!-- PRESET -->
+  <div class="panel active" id="panel-preset">
+    <div class="preset-grid">
+      <div class="preset-card legit" onclick="runPreset('legit')">
+        <div class="preset-tag legit">✓ Legitimate</div>
+        <h3>Normal Purchase</h3>
+        <div class="preset-row">Amount <span>$149.62</span></div>
+        <div class="preset-row">Time offset <span>406 seconds</span></div>
+        <div class="preset-row">Source <span>Row 1, Kaggle dataset</span></div>
+        <div class="preset-row">Ground truth <span style="color:var(--accent);font-weight:700">Legitimate</span></div>
+        <div class="preset-cta">→ Run this transaction</div>
+      </div>
+      <div class="preset-card fraud" onclick="runPreset('fraud')">
+        <div class="preset-tag fraud">⚠ Fraudulent</div>
+        <h3>Suspicious Transaction</h3>
+        <div class="preset-row">Amount <span>$1.00</span></div>
+        <div class="preset-row">Time offset <span>47,527 seconds</span></div>
+        <div class="preset-row">Source <span>Known fraud, dataset</span></div>
+        <div class="preset-row">Ground truth <span style="color:var(--danger);font-weight:700">Fraud</span></div>
+        <div class="preset-cta">→ Run this transaction</div>
+      </div>
+    </div>
+    <div id="result-preset" class="result"></div>
+    <div id="error-preset" class="error-box"></div>
+  </div>
+
+  <!-- SYNTHETIC -->
+  <div class="panel" id="panel-synthetic">
+    <div class="synth-card">
+      <h3>Synthetic Transaction Generator</h3>
+      <p>V1–V28 are sampled from the real statistical distribution (mean + std dev) of either fraud or legitimate transactions in the training data — simulating what production inference actually looks like.</p>
+
+      <div class="toggle-row">
+        <button class="toggle-btn active-legit" id="btn-legit" onclick="setClass('legit')">Legitimate Distribution</button>
+        <button class="toggle-btn" id="btn-fraud" onclick="setClass('fraud')">Fraud Distribution</button>
+      </div>
+
+      <div class="input-row">
+        <div class="field">
+          <label>Amount ($)</label>
+          <input type="number" id="synth-amount" value="85.00" min="0" step="0.01">
+        </div>
+        <div class="field">
+          <label>Time (seconds)</label>
+          <input type="number" id="synth-time" value="50000" min="0">
+        </div>
+      </div>
+
+      <div class="v-peek-label">V1–V28 preview — sampled from <span id="class-preview">legitimate</span> distribution</div>
+      <div class="v-peek" id="v-peek">Press "Generate &amp; Analyze" to sample values</div>
+    </div>
+
+    <button class="run-btn" id="synth-btn" onclick="runSynthetic()">Generate &amp; Analyze</button>
+    <div id="result-synthetic" class="result"></div>
+    <div id="error-synthetic" class="error-box"></div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-l">Built by <strong>Michael Martinez</strong> &nbsp;·&nbsp; XGBoost + AWS Lambda + API Gateway</div>
+    <div class="endpoint">POST /predict → hf3qn7izvl.execute-api.us-east-2.amazonaws.com</div>
+  </div>
+
+</div>
+
+<script>
+const API = 'https://hf3qn7izvl.execute-api.us-east-2.amazonaws.com/predict';
+
+const CLASS_STATS = {
+  legit: {
+    V1:{mean:0.008,std:1.958},V2:{mean:0.006,std:1.651},V3:{mean:0.014,std:1.516},
+    V4:{mean:0.003,std:1.415},V5:{mean:0.002,std:1.380},V6:{mean:0.004,std:1.332},
+    V7:{mean:0.001,std:1.237},V8:{mean:-0.001,std:1.194},V9:{mean:0.005,std:1.099},
+    V10:{mean:0.001,std:1.073},V11:{mean:-0.003,std:1.023},V12:{mean:0.002,std:0.994},
+    V13:{mean:0.000,std:0.995},V14:{mean:0.001,std:0.959},V15:{mean:0.000,std:0.915},
+    V16:{mean:0.001,std:0.876},V17:{mean:0.000,std:0.849},V18:{mean:0.000,std:0.834},
+    V19:{mean:0.000,std:0.814},V20:{mean:0.000,std:0.771},V21:{mean:0.000,std:0.734},
+    V22:{mean:0.000,std:0.726},V23:{mean:0.000,std:0.624},V24:{mean:0.000,std:0.606},
+    V25:{mean:0.000,std:0.522},V26:{mean:0.000,std:0.482},V27:{mean:0.000,std:0.404},
+    V28:{mean:0.000,std:0.330}
+  },
+  fraud: {
+    V1:{mean:-4.772,std:3.877},V2:{mean:3.623,std:5.108},V3:{mean:-7.033,std:5.670},
+    V4:{mean:4.542,std:3.753},V5:{mean:-2.581,std:5.019},V6:{mean:-1.337,std:2.591},
+    V7:{mean:-5.568,std:5.693},V8:{mean:0.570,std:3.487},V9:{mean:-2.581,std:2.943},
+    V10:{mean:-4.348,std:3.945},V11:{mean:2.188,std:3.078},V12:{mean:-7.046,std:5.100},
+    V13:{mean:0.229,std:1.601},V14:{mean:-7.153,std:5.210},V15:{mean:0.231,std:2.200},
+    V16:{mean:-3.482,std:3.762},V17:{mean:-5.378,std:6.461},V18:{mean:-2.016,std:3.346},
+    V19:{mean:0.650,std:2.656},V20:{mean:0.816,std:2.816},V21:{mean:0.789,std:2.283},
+    V22:{mean:0.003,std:1.403},V23:{mean:-0.173,std:1.278},V24:{mean:-0.025,std:0.985},
+    V25:{mean:0.100,std:0.791},V26:{mean:0.015,std:0.669},V27:{mean:0.249,std:0.857},
+    V28:{mean:0.094,std:0.512}
+  }
+};
+
+const PRESETS = {
+  legit: {
+    Time:406, Amount:149.62,
+    V1:-1.3598071,V2:-0.0727811,V3:2.5363467,V4:1.3781552,V5:-0.3383208,
+    V6:0.4623878,V7:0.2395986,V8:0.0986979,V9:0.363787,V10:0.090794,
+    V11:-0.5515995,V12:-0.6178009,V13:-0.9913898,V14:-0.3111694,V15:1.468177,
+    V16:-0.4704005,V17:0.2079708,V18:0.0257905,V19:0.403993,V20:0.2514121,
+    V21:-0.0183068,V22:0.2778375,V23:-0.1104738,V24:0.066928,V25:0.1285394,
+    V26:-0.1891093,V27:0.1335584,V28:-0.021053
+  },
+  fraud: {
+    Time:47527, Amount:1.00,
+    V1:-2.3122265,V2:1.9519642,V3:-1.6098026,V4:3.9979256,V5:-0.5224845,
+    V6:-1.4265453,V7:-2.5373073,V8:1.3917579,V9:-2.7700931,V10:-2.7722979,
+    V11:3.2020316,V12:-2.8990027,V13:-0.5952226,V14:-4.2894799,V15:0.3897489,
+    V16:-1.1407617,V17:-2.8305234,V18:-0.0168224,V19:0.4165486,V20:0.1261432,
+    V21:0.5177106,V22:-0.0350493,V23:-0.4659188,V24:0.3201703,V25:0.0445191,
+    V26:0.1778931,V27:0.2619498,V28:0.1100513
+  }
+};
+
+let synthClass = 'legit';
+
+function switchTab(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  el.classList.add('active');
+}
+
+function sampleNormal(mean, std) {
+  const u1 = Math.random(), u2 = Math.random();
+  return mean + std * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+}
+
+function generateVals(cls) {
+  const vals = {};
+  for (let i = 1; i <= 28; i++) {
+    const k = 'V' + i;
+    const s = CLASS_STATS[cls][k];
+    vals[k] = parseFloat(sampleNormal(s.mean, s.std).toFixed(6));
+  }
+  return vals;
+}
+
+function setClass(cls) {
+  synthClass = cls;
+  document.getElementById('btn-legit').className = 'toggle-btn' + (cls === 'legit' ? ' active-legit' : '');
+  document.getElementById('btn-fraud').className = 'toggle-btn' + (cls === 'fraud' ? ' active-fraud' : '');
+  document.getElementById('class-preview').textContent = cls === 'legit' ? 'legitimate' : 'fraud';
+  document.getElementById('v-peek').innerHTML = 'Press "Generate &amp; Analyze" to sample values';
+}
+
+function updatePeek(vals) {
+  document.getElementById('v-peek').innerHTML = Object.entries(vals)
+    .map(([k,v]) => `<span class="vk">${k}</span>: <span class="vv">${v}</span>`)
+    .join('  ');
+}
+
+async function callAPI(payload, resultId, errorId, btnId) {
+  const btn = btnId ? document.getElementById(btnId) : null;
+  const resultEl = document.getElementById(resultId);
+  const errorEl = document.getElementById(errorId);
+
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="dots"><span></span><span></span><span></span></span>'; }
+  resultEl.classList.remove('show');
+  errorEl.classList.remove('show');
+
+  try {
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    showResult(data, resultId);
+  } catch(e) {
+    errorEl.textContent = 'Connection error: ' + e.message;
+    errorEl.classList.add('show');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = 'Generate &amp; Analyze'; }
+  }
+}
+
+function showResult(data, containerId) {
+  const el = document.getElementById(containerId);
+  const isLegit = data.prediction === 'Legitimate';
+  const cls = isLegit ? 'legit' : 'fraud';
+  const icon = isLegit ? '✓' : '⚠';
+  const confPct = Math.round(data.confidence * 100);
+  const probPct = Math.round(data.probability * 100);
+
+  el.innerHTML = `
+    <div class="result-top ${cls}">
+      <div class="result-icon ${cls}">${icon}</div>
+      <div>
+        <div class="result-title ${cls}">${data.prediction}</div>
+        <div class="result-sub">Fraud probability: ${probPct}%</div>
+      </div>
+    </div>
+    <div class="result-body">
+      <div class="conf-row">
+        <span>Model confidence</span>
+        <strong>${confPct}%</strong>
+      </div>
+      <div class="conf-track">
+        <div class="conf-fill ${cls}" style="width:0%" id="cbar-${containerId}"></div>
+      </div>
+      <div class="raw-label">Raw API response</div>
+      <div class="raw">
+        {<br>
+        &nbsp;&nbsp;<span class="rk">"prediction"</span>: <span class="rs">"${data.prediction}"</span>,<br>
+        &nbsp;&nbsp;<span class="rk">"probability"</span>: <span class="rn">${data.probability}</span>,<br>
+        &nbsp;&nbsp;<span class="rk">"confidence"</span>: <span class="rn">${data.confidence}</span><br>
+        }
+      </div>
+    </div>
+  `;
+  el.classList.add('show');
+  setTimeout(() => {
+    const bar = document.getElementById('cbar-' + containerId);
+    if (bar) bar.style.width = confPct + '%';
+  }, 50);
+}
+
+async function runPreset(type) {
+  await callAPI(PRESETS[type], 'result-preset', 'error-preset', null);
+}
+
+async function runSynthetic() {
+  const vals = generateVals(synthClass);
+  updatePeek(vals);
+  const amount = parseFloat(document.getElementById('synth-amount').value) || 85;
+  const time = parseFloat(document.getElementById('synth-time').value) || 50000;
+  await callAPI({ Time: time, Amount: amount, ...vals }, 'result-synthetic', 'error-synthetic', 'synth-btn');
+}
+</script>
+</body>
+</html>
